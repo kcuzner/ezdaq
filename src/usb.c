@@ -1,6 +1,8 @@
 #include "usb.h"
 #include "arm_cm4.h"
 
+#include "adc.h"
+
 #define PID_OUT   0x1
 #define PID_IN    0x9
 #define PID_SOF   0x5
@@ -177,6 +179,8 @@ static void usb_endp0_transmit(const void* data, uint8_t length)
     endp0_data ^= 1;
 }
 
+static uint8_t tx_buffer[256];
+
 /**
  * Endpoint 0 setup handler
  */
@@ -186,7 +190,8 @@ static void usb_endp0_handle_setup(setup_t* packet)
     const uint8_t* data = NULL;
     uint8_t data_length = 0;
     uint32_t size = 0;
-
+    uint16_t *arryBuf = (uint16_t*)tx_buffer;
+    uint8_t i = 0;
 
     switch(packet->wRequestAndType)
     {
@@ -211,6 +216,17 @@ static void usb_endp0_handle_setup(setup_t* packet)
             }
         }
         goto stall;
+        break;
+    case 0x01c0: //get adc channel value (wIndex)
+        for (i = 0; i < 10; i++)
+        {
+            arryBuf[i] = adc_get_value(i);
+        }
+        data = tx_buffer;
+        data_length = 20;
+        //*((uint16_t*)tx_buffer) = adc_get_value(packet->wIndex);
+        //data = tx_buffer;
+        //data_length = 2;
         break;
     default:
         goto stall;
