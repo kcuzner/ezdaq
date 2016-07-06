@@ -46,7 +46,8 @@ divide those values by the known voltage. The resulting percentage is your
 For example, if I plugged my resistor divider on channel A0 into 3.3V, I would
 run the following command:
 
-```$ ./ezdaq 0
+```
+$ ./ezdaq 0
 Time,Channel 0
 1467771464.9665403,1.7990478515625
 ...
@@ -56,7 +57,8 @@ We now have 1.799 for the "voltage" seen at the pin with an attenuation factor
 of 1. If we divide 1.799 by 3.3 we get 0.545 for our attenuation value. Now we
 run the following to get our newly calibrated value:
 
-```$ ./ezdaq -a 0 0.545 0
+```
+$ ./ezdaq -a 0 0.545 0
 Time,Channel 0
 1467771571.2447994,3.301005232
 ...
