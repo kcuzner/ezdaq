@@ -32,7 +32,7 @@ def get_values(dev, channels):
 
 def main():
     # Parse arguments
-    parser = argparse.ArgumentParser(description='EZDQ host software writing values to stdout in CSV format')
+    parser = argparse.ArgumentParser(description='EZDAQ host software writing values to stdout in CSV format')
     parser.add_argument('-t', '--time', help='Set time between samples', type=float, default=0.5)
     parser.add_argument('-a', '--attenuation', help='Set channel attentuation level', type=float, nargs=2, default=[], action='append', metavar=('CHANNEL', 'ATTENUATION'))
     parser.add_argument('channels', help='Channel number to record', type=int, nargs='+', choices=range(0, 10))
