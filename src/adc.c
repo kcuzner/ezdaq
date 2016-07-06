@@ -41,7 +41,7 @@ static void adc_begin_conversion(uint8_t channel)
     conversion_channel = channel;
 
     //Set up CFG2
-    ADC0_CFG2 = channels[channel].useBChannel ? ADC_CFG2_MUXSEL_MASK : 0;
+    ADC0_CFG2 = ADC_CFG2_ADACKEN_MASK | (channels[channel].useBChannel ? ADC_CFG2_MUXSEL_MASK : 0);
 
     //Set up SC1A for a conversion
     //Note that this initiates the conversion, so it should be done after all
@@ -56,8 +56,9 @@ void adc_init(void)
     //Enable ADC0 module
     SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;
 
-    //Set up conversion precision and clock speed
-    ADC0_CFG1 = ADC_CFG1_MODE(0x3) | ADC_CFG1_ADIV(0x3); //16 bit conversion, 12MHz clock (96MHz / 8)
+    //Set up conversion precision and clock speed for calibration
+    ADC0_CFG1 = ADC_CFG1_MODE(0x1) | ADC_CFG1_ADIV(0x1) | ADC_CFG1_ADICLK(0x3); //12 bit conversion, adc async clock, div by 2 (<3MHz)
+    ADC0_CFG2 = ADC_CFG2_ADACKEN_MASK; //enable async clock
 
     //Enable hardware averaging and set up for calibration
     ADC0_SC3 = ADC_SC3_CAL_MASK | ADC_SC3_AVGS(0x3);
@@ -72,6 +73,9 @@ void adc_init(void)
     temp /= 2;
     temp |= 0x1000;
     ADC0_PG = temp;
+
+    //Set clock speed for measurements (no division)
+    ADC0_CFG1 = ADC_CFG1_MODE(0x1) | ADC_CFG1_ADICLK(0x3); //12 bit conversion, adc async clock, no divide
 
     //Set up interrupts
     enable_irq(IRQ(INT_ADC0));
