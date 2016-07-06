@@ -218,15 +218,9 @@ static void usb_endp0_handle_setup(setup_t* packet)
         goto stall;
         break;
     case 0x01c0: //get adc channel value (wIndex)
-        for (i = 0; i < 10; i++)
-        {
-            arryBuf[i] = adc_get_value(i);
-        }
+        *((uint16_t*)tx_buffer) = adc_get_value(packet->wIndex);
         data = tx_buffer;
-        data_length = 20;
-        //*((uint16_t*)tx_buffer) = adc_get_value(packet->wIndex);
-        //data = tx_buffer;
-        //data_length = 2;
+        data_length = 2;
         break;
     default:
         goto stall;

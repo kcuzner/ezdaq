@@ -13,6 +13,7 @@ idProduct = 0x05dc
 sManufacturer = 'kevincuzner.com'
 sProduct = 'EZDAQ'
 
+VOLTS_PER = 3.3/4096 # 3.3V reference is being used
 
 def find_device():
     for dev in usb.core.find(find_all=True, idVendor=idVendor, idProduct=idProduct):
@@ -20,20 +21,40 @@ def find_device():
                 usb.util.get_string(dev, dev.iProduct) == sProduct:
             return dev
 
+def get_value(dev, channel):
+    rt = usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_VENDOR, usb.util.CTRL_RECIPIENT_DEVICE)
+    raw_data = dev.ctrl_transfer(rt, 0x01, wIndex=channel, data_or_wLength=256)
+    data = struct.unpack('H', raw_data)
+    return data[0] * VOLTS_PER;
+
+def get_values(dev, channels):
+    return [get_value(dev, ch) for ch in channels]
+
 def main():
-    parser = argparse.ArgumentParser()
+    # Parse arguments
+    parser = argparse.ArgumentParser(description='EZDQ host software writing values to stdout in CSV format')
+    parser.add_argument('-t', '--time', help='Set time between samples', type=float, default=0.5)
+    parser.add_argument('-a', '--attenuation', help='Set channel attentuation level', type=float, nargs=2, default=[], action='append', metavar=('CHANNEL', 'ATTENUATION'))
+    parser.add_argument('channels', help='Channel number to record', type=int, nargs='+', choices=range(0, 10))
     args = parser.parse_args()
 
+    # Set up attentuation dictionary
+    att = args.attenuation if len(args.attenuation) else [[ch, 1] for ch in args.channels]
+    att = dict([(l[0], l[1]) for l in att])
+    for ch in args.channels:
+        if ch not in att:
+            att[ch] = 1
+
+    # Perform data logging
     dev = find_device()
     if dev is None:
         raise ValueError('No EZDAQ Found')
     dev.set_configuration()
+    print(','.join(['Time']+['Channel ' + str(ch) for ch in args.channels]))
     while True:
-        rt = usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_VENDOR, usb.util.CTRL_RECIPIENT_DEVICE)
-        raw_data = dev.ctrl_transfer(rt, 0x01, wIndex=0, data_or_wLength=256)
-        data = struct.unpack('HHHHHHHHHH', raw_data)
-        print(data)
-        time.sleep(0.5)
+        values = get_values(dev, args.channels)
+        print(','.join([str(time.time())] + [str(v[1] * (1/att[v[0]])) for v in zip(args.channels, values)]))
+        time.sleep(args.time)
 
 if __name__ == '__main__':
     main()
