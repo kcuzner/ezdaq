@@ -72,7 +72,7 @@ void adc_init(void)
     temp = ADC0_CLM0 + ADC0_CLM1 + ADC0_CLM2 + ADC0_CLM3 + ADC0_CLM4 + ADC0_CLMS;
     temp /= 2;
     temp |= 0x1000;
-    ADC0_PG = temp;
+    ADC0_MG = temp;
 
     //Set clock speed for measurements (no division)
     ADC0_CFG1 = ADC_CFG1_MODE(0x1) | ADC_CFG1_ADICLK(0x3); //12 bit conversion, adc async clock, no divide
